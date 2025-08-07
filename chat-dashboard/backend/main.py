@@ -1,10 +1,9 @@
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 import json
 import asyncio
 
 app = FastAPI()
-
 
 app.add_middleware(
     CORSMiddleware,
@@ -34,10 +33,12 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         varFiltersCg = "Charlie"
         while True:
+            # Simulate a "typing" event
             typing_message = {"type": "typing", "user": varFiltersCg, "isTyping": True}
             await websocket.send_text(json.dumps(typing_message))
             await asyncio.sleep(2)
 
+            # Simulate a new message
             new_message = {
                 "type": "message",
                 "id": len(messages_data) + 1,
@@ -48,7 +49,7 @@ async def websocket_endpoint(websocket: WebSocket):
             await websocket.send_text(json.dumps(new_message))
             messages_data.append(new_message)
             await asyncio.sleep(3)
+    except WebSocketDisconnect:
+        print("Client disconnected.")
     except Exception as e:
-        print(f"WebSocket closed with error: {e}")
-    finally:
-        await websocket.close()
+        print(f"An unexpected error occurred: {e}")
